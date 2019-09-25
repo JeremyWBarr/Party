@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Socket.io Testing Page</title>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+        <script src="https://github.com/processing/p5.js/releases/download/0.9.0/p5.js"></script>
+        <script>
+            var socket = io();
+            
+            $(function () {
+                $('.joinform').submit(function(e){
+                    e.preventDefault();
+                    socket.emit('join', $('.nickname').val(), $('.color').val());
+                    $('.nickname').val('');
+                    return false;
+                });
+
+                socket.on('playerupdate', function(playerlist){
+                    console.log(playerlist);
+                    for(var i = 0; i <= 4; i++) {
+                        playerfound = false;
+                        playerlist.forEach(function(player) {
+                            if(player.usernum == i) {
+                                playerfound = true;
+                                $('#'+player.usernum).html(player.nickname);
+                                $('#'+player.usernum).css('color', player.color);
+                            }
+                        });
+                        if(!playerfound) {
+                            $('#'+i).html('');
+                        }
+                    }
+                });
+            });
+        </script>
+        <style>
+            /*
+            .menu {
+                position: absolute;
+
+                width:  25%;
+                height: 500px;
+
+                top:  50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+
+                background-color: lightskyblue;
+                border-color: steelblue;
+                border-width: 4px;
+                border-style: solid;
+                box-shadow: 0px 0px 15px #888888;
+                border-radius: 10px;
+            }
+            */
+
+            table, td {
+                border: 1px solid black;
+                border-collapse: collapse;
+            }
+
+            td {
+                height: 20px;
+            }
+        </style>
+    </head>
+
+
+    <body>
+        <div class='menu'>
+            <h1> Test </h1>
+            <form class='joinform'>
+                <input class='nickname' type='text' placeholder='Nickname'/>
+                <input class='color' type='color'/>
+                <input type='submit' value='Join'/>
+            </form>
+
+            <table style='width: 200px;'>
+                <tr><td id='1'></td></tr>
+                <tr><td id='2'></td></tr>
+                <tr><td id='3'></td></tr>
+                <tr><td id='4'></td></tr>
+            </table>
+        </div>
+
+        <script src="sketch.js"></script>
+    </body>
+</html>
