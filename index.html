@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Socket.io Testing Page</title>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+        <script>
+            $(function () {
+                var socket = io();
+
+                $('#mform').submit(function(e){
+                    e.preventDefault();
+                    socket.emit('chat message', $('#m').val());
+                    $('#m').val('');
+                    return false;
+                });
+
+                $('#nform').submit(function(e){
+                    e.preventDefault();
+                    socket.emit('nickname', $('#n').val());
+                    $('#ntext').text('Nickname: '+ $('#n').val());
+                    $('#n').val('');
+                    return false;
+                });
+
+                socket.on('chat message', function(message){
+                    $('#chat').append(message+'<br>')
+                });
+            });
+        </script>
+    </head>
+
+
+    <body>
+        <form action="" id="nform">
+            <p id="ntext">Nickname: </p>
+            <input id="n" autocomplete="off"/><button>Enter</button>
+        </form>
+        <h2>Socket.io Testing Page</h2>
+        
+        <div id="chat" style="height:300px; width:220px; overflow-y:scroll"></div>
+        <form action="" id="mform">
+            <input id="m" autocomplete="off"/><button>Send</button>
+        </form>
+    </body>
+</html>
