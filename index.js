@@ -3,8 +3,8 @@ var app         = express();
 var path        = require('path');
 var http        = require('http').createServer(app);
 var io          = require('socket.io')(http);
-var numusers   = 0;
-var userlist  = [];
+
+var lobbies     = [];
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -12,76 +12,64 @@ app.get('/', function(req, res){
     res.redirect('index.html');
 });
 
+app.get('/lobby/:id', function(req, res){
+    res.sendFile('lobby.html', {root: __dirname+'/public'});
+});
+
 io.on('connection', function(socket){
-    var usernum     = ""
-    var joined      = false;
+
+    username    = '';
+    room        = '';
 
     console.log('A user connected.');
-    socket.emit('playerupdate', userlist);
 
     socket.on('disconnect', function(){
         console.log('A user disconnected.');
-        userlist.forEach(function(user, index){
-            if(user.usernum == usernum) {
-                numusers--;
-                userlist.splice(index, 1);
-
-                userlist.forEach(function(user, index){
-                    user.usernum = (index+1).toString();
-                });
-            }
-        });
-        playerupdate();
     });
 
-    socket.on('join', function(nn, c){
-        if(joined == false && numusers <= 4) {
-            joined = true;
-            numusers++;
-
-            usernum     = numusers.toString();
-
-            userlist.push({
-                'usernum':  usernum,
-                'nickname': nn, 
-                'color':    c,
-                'playerdata': {
-                    'x': 0,
-                    'y': 0
-                }
-            });
-            playerupdate();
-        } else {
-            userlist.forEach(function(user){
-                if(user.usernum == usernum) {
-                    user.nickname   = nn;
-                    user.color      = c;
-                    playerupdate();
-                }
-            });
-        }
-
-        socket.emit('joined', nn, c);
+    socket.on('login', function(un){
+        username = un;
     });
 
-    socket.on('update', function(data){
-        userlist.forEach(function(user){
-            if(user.usernum == usernum) {
-                user.playerdata.x += 5*data.right;
-                user.playerdata.x -= 5*data.left;
-                user.playerdata.y += 5*data.down;
-                user.playerdata.y -= 5*data.up;
-                socket.emit('update', userlist);
-            }
+    socket.on('createLobby', function() {
+        var id      = Math.random().toString(36).substring(2, 10);
+        var name    = username + "'s Lobby";
+        var lobby = new Lobby(id, name);
+        lobbies.push(lobby);
+
+        socket.join(id);
+        room = id;
+        socket.emit('redirect', '/lobby/'+id);
+
+        io.emit('updateLobbies', lobbies);
+    });
+
+    socket.on('getUsername', function(){
+        socket.emit('getUsernameCallback', username);
+    });
+
+    socket.on('getLobby', function(id) {
+        name = '';
+        lobbies.forEach(function(lobby){
+            console.log(lobby.id);
+            if(lobby.id == id)
+                name = lobby.name;
         });
+        socket.emit('getLobbyCallback', name);
+    })
+
+    socket.on('getLobbies', function(id) {
+        socket.emit('updateLobbies', lobbies);
     });
 });
-
-function playerupdate() {
-    console.log(userlist);
-    io.emit('playerupdate', userlist);
-}
 
 http.listen(3000, function(){
     console.log('listening on *:3000');
 });
+
+class Lobby {
+    constructor(i, n) {
+        this.id = i;
+        this.name = n;
+    }
+}

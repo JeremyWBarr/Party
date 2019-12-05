@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Socket.io Testing Page</title>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+        <script src="https://github.com/processing/p5.js/releases/download/0.9.0/p5.js"></script>
+        <script>
+            var socket = io();
+
+            var lobbyId =  window.location.href.slice(-8);
+            socket.emit('getLobby', lobbyId);
+            socket.emit('getUsername');
+            
+            $(function () {
+
+                socket.on('getLobbyCallback', function(lobby){
+                    console.log(lobby);
+                    $('.title').html(lobby);
+                });
+
+                socket.on('getUsernameCallback', function(username) {
+                    $('.loggedInAs').html('Logged in as: '+ username);
+                })
+            });
+        </script>
+
+        <style>
+            table, td {
+                border: 1px solid black;
+                border-collapse: collapse;
+            }
+
+            td {
+                height: 20px;
+            }
+        </style>
+    </head>
+
+
+    <body>
+        <h1 class='title'></h1>
+        <p class='loggedInAs'>Logged in as: </p>
+    </body>
+</html>

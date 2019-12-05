@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Socket.io Testing Page</title>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+        <script src="https://github.com/processing/p5.js/releases/download/0.9.0/p5.js"></script>
+        <script>
+            var socket = io();
+            
+            socket.emit('getLobbies');
+
+            $(function () {
+                $('.login').submit(function(e){
+                    e.preventDefault();
+                    socket.emit('login', $('#username').val());
+                    $('.loggedInAs').html('Logged in as: '+ $('#username').val());
+                    $('#username').val('');
+                    return false;
+                });
+
+                socket.on('updateLobbies', function(lobbylist){
+                    console.log(lobbylist);
+
+                    var oldTable                = document.getElementsByClassName('lobbyTable');
+                    if(oldTable.length > 0)
+                        oldTable[0].remove();
+                        
+                    var container               = document.getElementsByClassName('tableContainer')[0];
+                    var table                   = document.createElement('table');
+                    table.className             = 'lobbyTable';
+
+                    var headerRow               = document.createElement("tr");
+                    var header                  = document.createElement("th");
+                    headerRow.innerHTML         = 'Lobby Name';
+
+                    headerRow.appendChild(header);
+                    table.appendChild(headerRow);
+
+                    lobbylist.forEach(function(lobby){
+                        var row                 = document.createElement("tr");
+                        var cell                = document.createElement("td");
+                        
+                        var link                = document.createElement("a");
+                        link.innerHTML          = lobby.name;
+                        link.href               = '\\lobby\\'+lobby.id;
+
+                        cell.appendChild(link);
+                        row.appendChild(cell);
+                        table.appendChild(row);
+                    });
+
+                    container.appendChild(table);
+                });
+
+                socket.on('redirect', function(des){
+                    window.location.href = des;
+                });
+
+                $('.createLobby').click(function(){
+                    socket.emit('createLobby');
+                });
+            });
+        </script>
+
+        <style>
+            table, td {
+                border: 1px solid black;
+                border-collapse: collapse;
+            }
+
+            td {
+                height: 20px;
+            }
+        </style>
+    </head>
+
+
+    <body>
+        <h1> Home </h1>
+        <p class='loggedInAs'>Logged in as: </p>
+
+        <form class='login'>
+            <input type='text' id='username' placeholder='Username'/>
+            <input type='submit' value='Login'/>
+        </form>
+
+        <br/>
+
+        <input type='button' class='createLobby' value='Create Lobby'/>
+
+        <h2> Lobby List </h2>
+        <div class='tableContainer'>
+        </div>
+        
+        <!-- <script src="sketch.js"></script> -->
+    </body>
+</html>
